@@ -1,13 +1,13 @@
 import { ArrowUpRightIcon, QrCodeIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import type { StoredLink } from '../lib/links-store'
+import type { Link } from '../api/links-api'
 import { displayShortLink, hostnameOf, shortLinkFor } from '../lib/short-link'
 import { CopyButton } from './copy-button'
 import { QrDialog } from './qr-dialog'
 
 interface LinkStubProps {
-  link: Pick<StoredLink, 'shortCode' | 'longUrl'> & { createdAt?: number }
+  link: Pick<Link, 'shortCode' | 'longUrl'> & { createdAt?: number }
   className?: string
 }
 

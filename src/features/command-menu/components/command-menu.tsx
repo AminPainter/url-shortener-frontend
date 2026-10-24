@@ -23,7 +23,7 @@ import { displayShortLink, shortLinkFor } from '@/features/links/lib/short-link'
 export function CommandMenu() {
   const [open, setOpen] = useState(false)
   const session = useSession()
-  const links = useLinks()
+  const { links } = useLinks()
   const navigate = useNavigate()
   const { resolvedTheme, setTheme } = useTheme()
 

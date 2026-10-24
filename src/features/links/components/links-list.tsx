@@ -1,19 +1,33 @@
 import { useMemo, useState } from 'react'
-import { SearchIcon } from 'lucide-react'
+import { Loader2Icon, SearchIcon } from 'lucide-react'
 import { AnimatePresence } from 'motion/react'
-import { toast } from 'sonner'
-import { useSession } from '@/features/auth/hooks/use-session'
-import { linksStore, type StoredLink } from '../lib/links-store'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import type { Link } from '../api/links-api'
 import { LinkRow } from './link-row'
 
 interface LinksListProps {
-  links: StoredLink[]
+  links: Link[]
+  isPending: boolean
+  isError: boolean
+  refetch: () => void
+  hasNextPage: boolean
+  fetchNextPage: () => void
+  isFetchingNextPage: boolean
 }
 
-export function LinksList({ links }: LinksListProps) {
-  const userId = useSession()?.userId
+export function LinksList({
+  links,
+  isPending,
+  isError,
+  refetch,
+  hasNextPage,
+  fetchNextPage,
+  isFetchingNextPage,
+}: LinksListProps) {
   const [query, setQuery] = useState('')
 
+  // Filters the pages loaded so far; the API has no search yet.
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase()
     if (!needle) return links
@@ -22,14 +36,42 @@ export function LinksList({ links }: LinksListProps) {
     )
   }, [links, query])
 
-  function handleRemove(shortCode: string) {
-    if (!userId) return
-    const removed = links.find((link) => link.shortCode === shortCode)
-    linksStore.remove(userId, shortCode)
-    toast('Removed from this browser', {
-      description: 'The short link still redirects.',
-      action: removed && { label: 'Undo', onClick: () => linksStore.add(userId, removed) },
-    })
+  function renderBody() {
+    if (isPending) {
+      return (
+        <div className="space-y-3 px-4 py-4 sm:px-5">
+          {Array.from({ length: 3 }, (_, index) => (
+            <Skeleton key={index} className="h-11 w-full" />
+          ))}
+        </div>
+      )
+    }
+    if (isError && links.length === 0) {
+      return (
+        <div className="flex flex-col items-center gap-3 px-5 py-12 text-sm text-muted-foreground">
+          Couldn’t load your links.
+          <Button variant="outline" size="sm" onClick={() => refetch()}>
+            Try again
+          </Button>
+        </div>
+      )
+    }
+    if (visible.length === 0) {
+      return (
+        <p className="px-5 py-12 text-center text-sm text-muted-foreground">
+          {links.length === 0 ? 'Nothing here yet. Your first link is one paste away.' : `No links match “${query}”.`}
+        </p>
+      )
+    }
+    return (
+      <ul className="divide-y">
+        <AnimatePresence initial={false}>
+          {visible.map((link) => (
+            <LinkRow key={link.shortCode} link={link} />
+          ))}
+        </AnimatePresence>
+      </ul>
+    )
   }
 
   return (
@@ -48,18 +90,15 @@ export function LinksList({ links }: LinksListProps) {
         </label>
       </header>
 
-      {visible.length === 0 ? (
-        <p className="px-5 py-12 text-center text-sm text-muted-foreground">
-          {links.length === 0 ? 'Nothing here yet. Your first link is one paste away.' : `No links match “${query}”.`}
-        </p>
-      ) : (
-        <ul className="divide-y">
-          <AnimatePresence initial={false}>
-            {visible.map((link) => (
-              <LinkRow key={link.shortCode} link={link} onRemove={handleRemove} />
-            ))}
-          </AnimatePresence>
-        </ul>
+      {renderBody()}
+
+      {hasNextPage && (
+        <div className="flex justify-center border-t px-4 py-3">
+          <Button variant="ghost" size="sm" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+            {isFetchingNextPage && <Loader2Icon className="animate-spin" />}
+            Load more
+          </Button>
+        </div>
       )}
     </section>
   )

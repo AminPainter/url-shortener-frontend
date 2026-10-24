@@ -1,4 +1,4 @@
-import type { StoredLink } from './links-store'
+import type { Link } from '../api/links-api'
 import { hostnameOf } from './short-link'
 
 const DAY_MS = 86_400_000
@@ -11,9 +11,8 @@ export interface LinkStats {
   daily: number[]
 }
 
-// Everything here derives from links created in this browser — the backend
-// doesn't expose history or click analytics yet.
-export function computeLinkStats(links: StoredLink[], days = 14): LinkStats {
+// Derived from the pages loaded so far — the backend doesn't expose click analytics yet.
+export function computeLinkStats(links: Link[], days = 14): LinkStats {
   const startOfToday = new Date().setHours(0, 0, 0, 0)
   const daily = Array<number>(days).fill(0)
   const byHost = new Map<string, number>()

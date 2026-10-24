@@ -4,7 +4,7 @@ import { useCreateLink } from '../hooks/use-create-link'
 import { useLinks } from '../hooks/use-links'
 import { useShortenFocus } from '../hooks/use-shorten-focus'
 import { describeLinkError } from '../lib/link-errors'
-import type { StoredLink } from '../lib/links-store'
+import type { Link } from '../api/links-api'
 import { LinkStub } from './link-stub'
 import { LinksList } from './links-list'
 import { LinksOverview } from './links-overview'
@@ -18,10 +18,10 @@ interface LinksDashboardProps {
 
 export function LinksDashboard({ pendingUrl, onPendingConsumed }: LinksDashboardProps) {
   const session = useSession()
-  const links = useLinks()
+  const { links, ...linksQuery } = useLinks()
   const createLink = useCreateLink()
   const inputRef = useShortenFocus()
-  const [latest, setLatest] = useState<StoredLink | null>(null)
+  const [latest, setLatest] = useState<Link | null>(null)
   const consumed = useRef(false)
 
   function shorten(url: string) {
@@ -58,11 +58,11 @@ export function LinksDashboard({ pendingUrl, onPendingConsumed }: LinksDashboard
 
       {latest && <LinkStub link={latest} />}
 
-      <LinksOverview links={links} />
-      <LinksList links={links} />
+      <LinksOverview links={links} hasMore={linksQuery.hasNextPage} />
+      <LinksList links={links} {...linksQuery} />
 
       <p className="text-center font-mono text-[0.7rem] text-muted-foreground">
-        History is saved in this browser only. Press <kbd className="rounded border px-1">/</kbd> to shorten,{' '}
+        Press <kbd className="rounded border px-1">/</kbd> to shorten,{' '}
         <kbd className="rounded border px-1">⌘K</kbd> for everything else.
       </p>
     </div>

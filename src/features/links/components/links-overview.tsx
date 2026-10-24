@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 import { computeLinkStats } from '../lib/link-stats'
-import type { StoredLink } from '../lib/links-store'
+import type { Link } from '../api/links-api'
 import { Sparkline } from './sparkline'
 
 function Tile({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
@@ -12,13 +12,16 @@ function Tile({ label, children, className }: { label: string; children: React.R
   )
 }
 
-export function LinksOverview({ links }: { links: StoredLink[] }) {
+export function LinksOverview({ links, hasMore }: { links: Link[]; hasMore: boolean }) {
   const stats = computeLinkStats(links)
 
   return (
     <section aria-label="Overview" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       <Tile label="Links" className="bg-highlight text-highlight-foreground [&>span]:text-highlight-foreground/70">
-        <span className="font-display text-6xl tabular-nums">{stats.total}</span>
+        <span className="font-display text-6xl tabular-nums">
+          {stats.total}
+          {hasMore && '+'}
+        </span>
       </Tile>
       <Tile label="This week">
         <span className="font-display text-6xl tabular-nums">{stats.thisWeek}</span>

@@ -1,25 +1,23 @@
-import { ArrowUpRightIcon, EllipsisIcon, QrCodeIcon, Trash2Icon } from 'lucide-react'
+import { ArrowUpRightIcon, EllipsisIcon, QrCodeIcon } from 'lucide-react'
 import { motion } from 'motion/react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import type { StoredLink } from '../lib/links-store'
+import type { Link } from '../api/links-api'
 import { relativeTime } from '../lib/relative-time'
 import { displayShortLink, hostnameOf, shortLinkFor } from '../lib/short-link'
 import { CopyButton } from './copy-button'
 import { QrDialog } from './qr-dialog'
 
 interface LinkRowProps {
-  link: StoredLink
-  onRemove: (shortCode: string) => void
+  link: Link
 }
 
-export function LinkRow({ link, onRemove }: LinkRowProps) {
+export function LinkRow({ link }: LinkRowProps) {
   const url = shortLinkFor(link.shortCode)
   const host = hostnameOf(link.longUrl)
 
@@ -83,11 +81,6 @@ export function LinkRow({ link, onRemove }: LinkRowProps) {
               <a href={link.longUrl} target="_blank" rel="noreferrer">
                 <ArrowUpRightIcon /> Open destination
               </a>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            {/* No delete endpoint exists yet: this only forgets the link locally; it keeps redirecting. */}
-            <DropdownMenuItem variant="destructive" onSelect={() => onRemove(link.shortCode)}>
-              <Trash2Icon /> Remove from this browser
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

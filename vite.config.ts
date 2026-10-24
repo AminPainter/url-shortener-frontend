@@ -19,6 +19,9 @@ export default defineConfig({
     alias: { '@': path.resolve(import.meta.dirname, './src') },
   },
   server: {
+    // Fixed port; fail instead of silently drifting to the next free one.
+    port: 6175,
+    strictPort: true,
     // The backend has no CORS; in dev the browser talks to Kong through Vite.
     proxy: { '/api': 'http://localhost:9113' },
   },

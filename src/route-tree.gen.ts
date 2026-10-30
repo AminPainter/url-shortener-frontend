@@ -14,6 +14,7 @@ import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as AuthedLinksRouteImport } from './routes/_authed/links'
+import { Route as AuthedPlansRouteImport } from './routes/_authed/plans'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -39,18 +40,25 @@ const AuthedLinksRoute = AuthedLinksRouteImport.update({
   path: '/links',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedPlansRoute = AuthedPlansRouteImport.update({
+  id: '/plans',
+  path: '/plans',
+  getParentRoute: () => AuthedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/links': typeof AuthedLinksRoute
+  '/plans': typeof AuthedPlansRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/links': typeof AuthedLinksRoute
+  '/plans': typeof AuthedPlansRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -59,13 +67,21 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/_authed/links': typeof AuthedLinksRoute
+  '/_authed/plans': typeof AuthedPlansRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/signup' | '/links'
+  fullPaths: '/' | '/login' | '/signup' | '/links' | '/plans'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/signup' | '/links'
-  id: '__root__' | '/' | '/_authed' | '/login' | '/signup' | '/_authed/links'
+  to: '/' | '/login' | '/signup' | '/links' | '/plans'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authed'
+    | '/login'
+    | '/signup'
+    | '/_authed/links'
+    | '/_authed/plans'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -112,15 +128,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedLinksRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/plans': {
+      id: '/_authed/plans'
+      path: '/plans'
+      fullPath: '/plans'
+      preLoaderRoute: typeof AuthedPlansRouteImport
+      parentRoute: typeof AuthedRoute
+    }
   }
 }
 
 interface AuthedRouteChildren {
   AuthedLinksRoute: typeof AuthedLinksRoute
+  AuthedPlansRoute: typeof AuthedPlansRoute
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedLinksRoute: AuthedLinksRoute,
+  AuthedPlansRoute: AuthedPlansRoute,
 }
 
 const AuthedRouteWithChildren =

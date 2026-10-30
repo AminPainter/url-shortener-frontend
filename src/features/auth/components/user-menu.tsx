@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
-import { LayoutListIcon, LogOutIcon } from 'lucide-react'
+import { GaugeIcon, LayoutListIcon, LogOutIcon } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,11 +8,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { useSubscription } from '@/features/subscription/hooks/use-subscription'
 import type { Session } from '../lib/session-store'
 import { sessionStore } from '../lib/session-store'
 
 export function UserMenu({ session }: { session: Session }) {
   const navigate = useNavigate()
+  const { data: subscription } = useSubscription()
 
   return (
     <DropdownMenu>
@@ -27,6 +29,14 @@ export function UserMenu({ session }: { session: Session }) {
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => navigate({ to: '/links' })}>
           <LayoutListIcon /> Your links
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => navigate({ to: '/plans' })}>
+          <GaugeIcon /> Plan
+          {subscription && (
+            <span className="ml-auto font-mono text-xs text-muted-foreground tabular-nums">
+              {subscription.name} · {subscription.linkCount}/{subscription.linkLimit}
+            </span>
+          )}
         </DropdownMenuItem>
         <DropdownMenuItem
           onSelect={() => {

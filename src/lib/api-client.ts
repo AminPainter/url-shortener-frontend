@@ -3,11 +3,13 @@ export type FieldErrors = Record<string, string[] | undefined>
 export class ApiError extends Error {
   readonly status: number
   readonly fieldErrors: FieldErrors
+  readonly errorCode: string | undefined
 
-  constructor(status: number, message: string, fieldErrors: FieldErrors = {}) {
+  constructor(status: number, message: string, fieldErrors: FieldErrors = {}, errorCode?: string) {
     super(message)
     this.status = status
     this.fieldErrors = fieldErrors
+    this.errorCode = errorCode
   }
 }
 
@@ -33,6 +35,7 @@ async function apiRequest<T>(method: 'GET' | 'POST', path: string, { body, token
       response.status,
       payload?.message ?? response.statusText,
       payload?.errors ?? {},
+      payload?.errorCode,
     )
   }
   return payload as T

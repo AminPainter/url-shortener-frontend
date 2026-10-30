@@ -58,7 +58,7 @@ export function LinksDashboard({ pendingUrl, onPendingConsumed }: LinksDashboard
 
       {latest && <LinkStub link={latest} />}
 
-      <LinksOverview links={links} hasMore={linksQuery.hasNextPage} />
+      <LinksOverview links={links} />
       <LinksList links={links} {...linksQuery} />
 
       <p className="text-center font-mono text-[0.7rem] text-muted-foreground">

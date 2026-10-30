@@ -1,3 +1,4 @@
+import { useSubscription } from '@/features/subscription/hooks/use-subscription'
 import { cn } from '@/lib/utils'
 import { computeLinkStats } from '../lib/link-stats'
 import type { Link } from '../api/links-api'
@@ -12,15 +13,16 @@ function Tile({ label, children, className }: { label: string; children: React.R
   )
 }
 
-export function LinksOverview({ links, hasMore }: { links: Link[]; hasMore: boolean }) {
+export function LinksOverview({ links }: { links: Link[] }) {
   const stats = computeLinkStats(links)
+  const { data: subscription } = useSubscription()
 
   return (
     <section aria-label="Overview" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       <Tile label="Links" className="bg-highlight text-highlight-foreground [&>span]:text-highlight-foreground/70">
         <span className="font-display text-6xl tabular-nums">
-          {stats.total}
-          {hasMore && '+'}
+          {subscription?.linkCount ?? stats.total}
+          {subscription && <span className="text-3xl text-highlight-foreground/60"> / {subscription.linkLimit}</span>}
         </span>
       </Tile>
       <Tile label="This week">

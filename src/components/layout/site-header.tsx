@@ -4,6 +4,9 @@ import { useSession } from '@/features/auth/hooks/use-session'
 import { Logo } from './logo'
 import { ThemeToggle } from './theme-toggle'
 
+const navLinkClassName =
+  'hidden rounded-lg px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground data-[status=active]:text-foreground sm:block'
+
 function openCommandMenu() {
   window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))
 }
@@ -26,16 +29,19 @@ export function SiteHeader() {
           <ThemeToggle />
           {session ? (
             <>
-              <Link
-                to="/links"
-                className="hidden rounded-lg px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground data-[status=active]:text-foreground sm:block"
-              >
+              <Link to="/links" className={navLinkClassName}>
                 Your links
+              </Link>
+              <Link to="/plans" className={navLinkClassName}>
+                Plans
               </Link>
               <UserMenu session={session} />
             </>
           ) : (
             <>
+              <Link to="/plans" className={navLinkClassName}>
+                Plans
+              </Link>
               <Link to="/login" className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground">
                 Sign in
               </Link>

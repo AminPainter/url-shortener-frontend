@@ -12,9 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as PlansRouteImport } from './routes/plans'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as AuthedLinksRouteImport } from './routes/_authed/links'
-import { Route as AuthedPlansRouteImport } from './routes/_authed/plans'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -30,6 +30,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlansRoute = PlansRouteImport.update({
+  id: '/plans',
+  path: '/plans',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
@@ -40,54 +45,50 @@ const AuthedLinksRoute = AuthedLinksRouteImport.update({
   path: '/links',
   getParentRoute: () => AuthedRoute,
 } as any)
-const AuthedPlansRoute = AuthedPlansRouteImport.update({
-  id: '/plans',
-  path: '/plans',
-  getParentRoute: () => AuthedRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/plans': typeof PlansRoute
   '/signup': typeof SignupRoute
   '/links': typeof AuthedLinksRoute
-  '/plans': typeof AuthedPlansRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/plans': typeof PlansRoute
   '/signup': typeof SignupRoute
   '/links': typeof AuthedLinksRoute
-  '/plans': typeof AuthedPlansRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authed': typeof AuthedRouteWithChildren
   '/login': typeof LoginRoute
+  '/plans': typeof PlansRoute
   '/signup': typeof SignupRoute
   '/_authed/links': typeof AuthedLinksRoute
-  '/_authed/plans': typeof AuthedPlansRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/signup' | '/links' | '/plans'
+  fullPaths: '/' | '/login' | '/plans' | '/signup' | '/links'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/signup' | '/links' | '/plans'
+  to: '/' | '/login' | '/plans' | '/signup' | '/links'
   id:
     | '__root__'
     | '/'
     | '/_authed'
     | '/login'
+    | '/plans'
     | '/signup'
     | '/_authed/links'
-    | '/_authed/plans'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthedRoute: typeof AuthedRouteWithChildren
   LoginRoute: typeof LoginRoute
+  PlansRoute: typeof PlansRoute
   SignupRoute: typeof SignupRoute
 }
 
@@ -114,6 +115,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/plans': {
+      id: '/plans'
+      path: '/plans'
+      fullPath: '/plans'
+      preLoaderRoute: typeof PlansRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signup': {
       id: '/signup'
       path: '/signup'
@@ -128,24 +136,15 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedLinksRouteImport
       parentRoute: typeof AuthedRoute
     }
-    '/_authed/plans': {
-      id: '/_authed/plans'
-      path: '/plans'
-      fullPath: '/plans'
-      preLoaderRoute: typeof AuthedPlansRouteImport
-      parentRoute: typeof AuthedRoute
-    }
   }
 }
 
 interface AuthedRouteChildren {
   AuthedLinksRoute: typeof AuthedLinksRoute
-  AuthedPlansRoute: typeof AuthedPlansRoute
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedLinksRoute: AuthedLinksRoute,
-  AuthedPlansRoute: AuthedPlansRoute,
 }
 
 const AuthedRouteWithChildren =
@@ -155,6 +154,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthedRoute: AuthedRouteWithChildren,
   LoginRoute: LoginRoute,
+  PlansRoute: PlansRoute,
   SignupRoute: SignupRoute,
 }
 export const routeTree = rootRouteImport

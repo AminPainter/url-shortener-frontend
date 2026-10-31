@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { HomeIcon, LayoutListIcon, LinkIcon, LogInIcon, LogOutIcon, MoonIcon } from 'lucide-react'
+import { GaugeIcon, HomeIcon, LayoutListIcon, LinkIcon, LogInIcon, LogOutIcon, MoonIcon } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
 import {
@@ -72,6 +72,9 @@ export function CommandMenu() {
                 <LayoutListIcon /> Your links
               </CommandItem>
             )}
+            <CommandItem keywords={['pricing', 'limits', 'subscription']} onSelect={() => run(() => navigate({ to: '/plans' }))}>
+              <GaugeIcon /> Plans
+            </CommandItem>
             <CommandItem onSelect={() => run(() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark'))}>
               <MoonIcon /> Toggle theme
             </CommandItem>

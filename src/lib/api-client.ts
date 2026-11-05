@@ -19,14 +19,14 @@ interface RequestOptions {
 }
 
 // All calls go to same-origin /api; Vite proxies to Kong in dev.
-async function apiRequest<T>(method: 'GET' | 'POST', path: string, { body, token }: RequestOptions): Promise<T> {
+async function apiRequest<T>(method: 'GET' | 'POST' | 'PATCH', path: string, { body, token }: RequestOptions): Promise<T> {
   const response = await fetch(`/api${path}`, {
     method,
     headers: {
-      ...(method === 'POST' ? { 'Content-Type': 'application/json' } : {}),
+      ...(method !== 'GET' ? { 'Content-Type': 'application/json' } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    body: method === 'POST' ? JSON.stringify(body ?? {}) : undefined,
+    body: method !== 'GET' ? JSON.stringify(body ?? {}) : undefined,
   })
 
   const payload = await response.json().catch(() => null)
@@ -44,3 +44,5 @@ async function apiRequest<T>(method: 'GET' | 'POST', path: string, { body, token
 export const apiGet = <T>(path: string, options: RequestOptions = {}) => apiRequest<T>('GET', path, options)
 
 export const apiPost = <T>(path: string, options: RequestOptions = {}) => apiRequest<T>('POST', path, options)
+
+export const apiPatch = <T>(path: string, options: RequestOptions = {}) => apiRequest<T>('PATCH', path, options)

@@ -1,21 +1,38 @@
+import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { ArrowRightIcon } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useSession } from '@/features/auth/hooks/use-session'
 import { cn } from '@/lib/utils'
-import type { Plan, Subscription } from '../api/subscription-api'
+import type { BillingInterval, Plan, Subscription } from '../api/subscription-api'
 import { usePlans } from '../hooks/use-plans'
 import { useSubscription } from '../hooks/use-subscription'
+import { formatDate, formatPrice } from '../lib/format-price'
+import { BillingDetailsDialog } from './billing-details-dialog'
+import { CancelSubscriptionDialog } from './cancel-subscription-dialog'
 import { UsageMeter } from './usage-meter'
 
 const STARTING_PLAN: Plan['plan'] = 'FREE'
+
+function describeCurrentPlan(subscription: Subscription) {
+  const billing = subscription.billing
+  if (!billing) return `You’re on ${subscription.name}.`
+  if (billing.cancelledAt && billing.validUntil)
+    return `You’re on ${subscription.name} until ${formatDate(billing.validUntil)}, then Free.`
+  if (billing.status === 'HALTED') return `Your last ${subscription.name} payment failed. Update your card from the Glomo email to keep it.`
+  if (billing.currentPeriodEnd) return `You’re on ${subscription.name}. Renews ${formatDate(billing.currentPeriodEnd)}.`
+  return `You’re on ${subscription.name}.`
+}
 
 export function PlansPage() {
   const session = useSession()
   const plans = usePlans()
   const subscription = useSubscription()
+  const [interval, setBillingInterval] = useState<BillingInterval>('MONTH')
+  const [checkoutPlan, setCheckoutPlan] = useState<Plan | null>(null)
   const isError = plans.isError || subscription.isError
 
   function retry() {
@@ -33,10 +50,16 @@ export function PlansPage() {
         <p className="text-muted-foreground">
           {session
             ? subscription.data
-              ? `You’re on ${subscription.data.name}. Plan changes are coming soon.`
-              : 'Plan changes are coming soon.'
-            : 'Every account starts on Free, no card needed. Paid plans are coming soon.'}
+              ? describeCurrentPlan(subscription.data)
+              : 'Upgrade any time. Cancel whenever you like.'
+            : 'Every account starts on Free, no card needed.'}
         </p>
+        <Tabs value={interval} onValueChange={(value) => setBillingInterval(value as BillingInterval)}>
+          <TabsList aria-label="Billing interval">
+            <TabsTrigger value="MONTH">Monthly</TabsTrigger>
+            <TabsTrigger value="YEAR">Yearly</TabsTrigger>
+          </TabsList>
+        </Tabs>
       </header>
 
       {isError ? (
@@ -50,18 +73,37 @@ export function PlansPage() {
         <section aria-label="Plans" className="grid gap-3 md:grid-cols-3">
           {plans.data
             ? plans.data.map((plan) => (
-                <PlanCard key={plan.plan} plan={plan} isSignedIn={Boolean(session)} subscription={subscription.data} />
+                <PlanCard
+                  key={plan.plan}
+                  plan={plan}
+                  interval={interval}
+                  isSignedIn={Boolean(session)}
+                  subscription={subscription.data}
+                  onUpgrade={() => setCheckoutPlan(plan)}
+                />
               ))
-            : Array.from({ length: 3 }, (_, index) => <Skeleton key={index} className="h-56 rounded-2xl" />)}
+            : Array.from({ length: 3 }, (_, index) => <Skeleton key={index} className="h-64 rounded-2xl" />)}
         </section>
       )}
+
+      <BillingDetailsDialog plan={checkoutPlan} interval={interval} onOpenChange={(open) => !open && setCheckoutPlan(null)} />
     </div>
   )
 }
 
-function PlanCard({ plan, isSignedIn, subscription }: { plan: Plan; isSignedIn: boolean; subscription?: Subscription }) {
+interface PlanCardProps {
+  plan: Plan
+  interval: BillingInterval
+  isSignedIn: boolean
+  subscription?: Subscription
+  onUpgrade: () => void
+}
+
+function PlanCard({ plan, interval, isSignedIn, subscription, onUpgrade }: PlanCardProps) {
   const isCurrent = subscription?.plan === plan.plan
   const isStartingPlan = !isSignedIn && plan.plan === STARTING_PLAN
+  const hasPaidPlan = Boolean(subscription?.billing && !subscription.billing.cancelledAt)
+  const canCancel = isCurrent && hasPaidPlan
 
   return (
     <article
@@ -77,21 +119,41 @@ function PlanCard({ plan, isSignedIn, subscription }: { plan: Plan; isSignedIn: 
         {isCurrent && <Badge>Current plan</Badge>}
         {isStartingPlan && <Badge>Start here</Badge>}
       </div>
-      <p>
-        <span className="font-display text-6xl tabular-nums">{plan.linkLimit.toLocaleString()}</span>
-        <span className="ml-2 text-muted-foreground">links</span>
-      </p>
-      <div className="mt-auto">
+      <div className="space-y-1">
+        <p>
+          <span className="font-display text-6xl tabular-nums">{plan.linkLimit.toLocaleString()}</span>
+          <span className="ml-2 text-muted-foreground">links</span>
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {plan.prices
+            ? `${formatPrice(plan.prices[interval], plan.prices.currency)} / ${interval === 'MONTH' ? 'month' : 'year'}`
+            : 'Free forever'}
+        </p>
+      </div>
+      <div className="mt-auto space-y-2">
         {isCurrent && subscription ? (
-          <UsageMeter used={subscription.linkCount} limit={subscription.linkLimit} />
+          <>
+            <UsageMeter used={subscription.linkCount} limit={subscription.linkLimit} />
+            {canCancel && <CancelSubscriptionDialog subscription={subscription} />}
+          </>
         ) : isStartingPlan ? (
           <Button size="lg" className="w-full" asChild>
             <Link to="/signup">
               Start free <ArrowRightIcon data-icon="inline-end" />
             </Link>
           </Button>
+        ) : !plan.prices ? null : !isSignedIn ? (
+          <Button size="lg" variant="outline" className="w-full" asChild>
+            <Link to="/signup">
+              Sign up to upgrade <ArrowRightIcon data-icon="inline-end" />
+            </Link>
+          </Button>
+        ) : hasPaidPlan ? (
+          <p className="font-mono text-[0.7rem] tracking-[0.14em] text-muted-foreground uppercase">Cancel your plan to switch</p>
         ) : (
-          <p className="font-mono text-[0.7rem] tracking-[0.14em] text-muted-foreground uppercase">Available soon</p>
+          <Button size="lg" className="w-full" onClick={onUpgrade}>
+            Upgrade to {plan.name} <ArrowRightIcon data-icon="inline-end" />
+          </Button>
         )}
       </div>
     </article>

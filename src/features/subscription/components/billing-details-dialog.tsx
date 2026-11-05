@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { Loader2Icon, LockIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -22,7 +23,13 @@ const optional = (value: FormDataEntryValue | null) => String(value ?? '').trim(
 
 export function BillingDetailsDialog({ plan, interval, onOpenChange }: BillingDetailsDialogProps) {
   const profile = useProfile(Boolean(plan))
-  const checkout = useCheckout()
+  const handedOffToGlomo = useRef(false)
+  const checkout = useCheckout({
+    onCheckoutOpen: () => {
+      handedOffToGlomo.current = true
+      onOpenChange(false)
+    },
+  })
   const fieldErrors = checkout.error instanceof ApiError ? checkout.error.fieldErrors : {}
   const hasFieldErrors = Object.keys(fieldErrors).length > 0
   const address = profile.data?.address
@@ -31,6 +38,7 @@ export function BillingDetailsDialog({ plan, interval, onOpenChange }: BillingDe
     event.preventDefault()
     if (!plan || plan.plan === 'FREE') return
     const form = new FormData(event.currentTarget)
+    handedOffToGlomo.current = false
     checkout.mutate(
       {
         plan: plan.plan,
@@ -51,10 +59,14 @@ export function BillingDetailsDialog({ plan, interval, onOpenChange }: BillingDe
         onSuccess: (outcome) => {
           if (outcome.kind === 'success') {
             toast.success(`You’re on ${plan.name}`, { description: 'Your new link limit is live.' })
-            onOpenChange(false)
           } else if (outcome.kind === 'failure') {
             toast.error('Payment didn’t go through', { description: outcome.message ?? 'Try another card.' })
           }
+        },
+        onError: (error) => {
+          if (!handedOffToGlomo.current) return
+          toast.error('Couldn’t confirm your payment', { description: describeBillingError(error) })
+          checkout.reset()
         },
       },
     )
@@ -62,7 +74,10 @@ export function BillingDetailsDialog({ plan, interval, onOpenChange }: BillingDe
 
   return (
     <Dialog open={Boolean(plan)} onOpenChange={(open) => !checkout.isPending && onOpenChange(open)}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent
+        className="sm:max-w-md"
+        onCloseAutoFocus={(event) => handedOffToGlomo.current && event.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle className="font-display text-3xl font-normal">Billing details</DialogTitle>
           <DialogDescription>
@@ -113,7 +128,7 @@ export function BillingDetailsDialog({ plan, interval, onOpenChange }: BillingDe
 
             <Button type="submit" size="lg" className="w-full" disabled={checkout.isPending}>
               {checkout.isPending ? <Loader2Icon className="animate-spin" /> : <LockIcon />}
-              {checkout.isPending ? 'Waiting for checkout…' : 'Continue to payment'}
+              {checkout.isPending ? 'Preparing checkout…' : 'Continue to payment'}
             </Button>
           </form>
         )}

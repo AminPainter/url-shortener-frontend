@@ -12,7 +12,7 @@ interface CheckoutInput {
   profile: ProfileUpdate
 }
 
-export function useCheckout() {
+export function useCheckout({ onCheckoutOpen }: { onCheckoutOpen: () => void }) {
   const session = useSession()
   const queryClient = useQueryClient()
   return useMutation({
@@ -20,6 +20,7 @@ export function useCheckout() {
       const token = session!.token
       await updateProfile(token, profile)
       const { subscriptionId, publicKey } = await startCheckout(token, plan, interval)
+      onCheckoutOpen()
       const outcome = await openGlomoCheckout(publicKey, subscriptionId)
       if (outcome.kind !== 'success') return outcome
       await confirmCheckout(token, {

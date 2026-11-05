@@ -1,4 +1,4 @@
-const GLOMO_SDK_URL = 'https://unified-sdk.glomopay.com/index.js'
+const GLOMO_SDK_URL = import.meta.env.VITE_GLOMO_SDK_URL ?? 'https://unified-checkout-sdk-staging.web.app/index.js'
 
 interface SuccessPayload {
   orderId: string
